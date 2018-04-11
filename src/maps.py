@@ -1,5 +1,7 @@
 from folium.plugins import HeatMap
-from folium import Map, Marker
+from folium import Map, Marker, CircleMarker
+from branca.colormap import LinearColormap
+from pandas import DataFrame, concat
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
@@ -110,3 +112,65 @@ def plot_dist_stations(df):
     ax.set_xticklabels(df['station'], minor=False)
     ax.set_yticklabels(df['station'], minor=False)
     plt.show()
+
+
+def map_points_circles(df, feature, date):
+
+     print(feature.title(),'at time:' , date)
+
+     # Create a map
+     this_map = Map(prefer_canvas=True)
+
+     # Check for the inputs to be on the dataframe
+     # Getting data
+     data = df[df['datetime'] == date]
+
+     # Create a color map
+     color_var = str(feature) #what variable will determine the color
+     cmap = LinearColormap(['blue', 'red'],
+                              vmin=data[color_var].quantile(0.05), vmax=data[color_var].quantile(0.95),
+                              caption = color_var)
+
+     # Add the color map legend to your map
+     this_map.add_child(cmap)
+
+     def plotDot(point):
+
+         '''Takes a series that contains a list of floats named latitude and longitude and
+         this function creates a CircleMarker and adds it to your this_map'''
+
+         CircleMarker(location=[point.latitude, point.longitude],
+                        fill_color=cmap(point[color_var]),
+                            fill=True,
+                            fill_opacity=0.4,
+                            radius=40,
+                         weight=0).add_to(this_map)
+
+            # Iterate over rows
+     data.apply(plotDot, axis=1)
+
+     # Set the boundaries
+     this_map.fit_bounds(this_map.get_bounds())
+
+     # Show plot
+     return this_map
+
+
+
+def map_points_series(df, feature_name):
+     map_time = Map(location=[df.latitude.values[0],df.longitude.values[0]], zoom_start=11)
+     df['latitude'] = df['latitude'].astype(float)
+     df['longitude'] = df['longitude'].astype(float)
+     assert feature_name in df.columns
+     # map_df = df[['latitude','longitude',str(feature_name)]]
+     dataframe = DataFrame(columns=['latitude','longitude',feature_name])
+     station_names = df.station.columns
+     for station in station_names:
+         print(station)
+         dataframe = concat([dataframe,
+                             df[df['station'] == station]\
+                 .reset_index().set_index('datetime')\
+                 .resample('M').mean()\
+                 .reset_index()[['latitude','longitude',str(feature_name)]]],
+                             axis=0)
+     return map_time

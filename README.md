@@ -12,6 +12,6 @@ To get an overview of the airquality and weather measuement stations and use _Fo
 ![Alt text](figures/daily_temperature_stations.png?raw=true "Daily Temperature Stations time series")
 
 ### Temperature on Weather Stations
-![Alt text](figures/temperature_weather_stations.png?raw=true "Temperature on Weather Stations Mapped")
+![Alt text](figures/temperature_stations.png?raw=true "Temperature on Weather Stations Mapped")
 
 
